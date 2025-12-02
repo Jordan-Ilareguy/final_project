@@ -175,7 +175,7 @@ void app_main() {
       ESP_LOGI(TAG, "MPU TX: %s", payload);
     }
 
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    vTaskDelay(pdMS_TO_TICKS(800));
   }
 }
 
@@ -187,8 +187,10 @@ void setupGPIO() {
   gpio_set_direction(GREEN_LED, GPIO_MODE_OUTPUT);
 
   // Set initial state (all off)
-  gpio_set_level(RED_LED, 0);
-  gpio_set_level(GREEN_LED, 0);
+  // With wiring VCC -> resistor -> LED -> GPIO, LEDs are active-low.
+  // Drive HIGH to turn them OFF initially.
+  gpio_set_level(RED_LED, 1);
+  gpio_set_level(GREEN_LED, 1);
 
   // Set up keypad rows as outputs
   for (int i = 0; i < ROWS; i++) {
@@ -259,14 +261,13 @@ void correctPINAction() {
   printf("\nAccess Granted!\n");
 
   // Turn off any previous LED state
-  gpio_set_level(RED_LED, 0);
+  // Active-low: drive HIGH to turn red OFF
+  gpio_set_level(RED_LED, 1);
 
   // Turn on green LED
-  gpio_set_level(GREEN_LED, 1);
-
-  // Keep green LED on for 5 seconds
-  vTaskDelay(pdMS_TO_TICKS(5000));
+  // Active-low: drive LOW to turn green ON
   gpio_set_level(GREEN_LED, 0);
+  // Leave green LED on to indicate persistent success state
 }
 
 void incorrectPINAction() {
@@ -274,14 +275,17 @@ void incorrectPINAction() {
   printf("\nAccess Denied!\n");
 
   // Turn off any previous LED state
-  gpio_set_level(GREEN_LED, 0);
+  // Active-low: drive HIGH to turn green OFF
+  gpio_set_level(GREEN_LED, 1);
 
   // Turn on red LED
-  gpio_set_level(RED_LED, 1);
+  // Active-low: drive LOW to turn red ON
+  gpio_set_level(RED_LED, 0);
 
   // Keep red LED on for 2 seconds
   vTaskDelay(pdMS_TO_TICKS(2000));
-  gpio_set_level(RED_LED, 0);
+  // Active-low: drive HIGH to turn red OFF
+  gpio_set_level(RED_LED, 1);
 }
 
 void resetPINEntry() {
